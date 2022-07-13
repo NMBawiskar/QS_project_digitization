@@ -3157,7 +3157,6 @@ S.G.P.T,Eq/l,Jaffe,1.2,2.2
 Creatinine,U/L,Jaffe,0,1
 S.G.O.T.,%,Hexokinase,1.5,3
 Blood Glucose Random,Eq/l,IFCC,1.5,3
-LDL CHOLESTEROL,mg/dl,Calculated,0,100
 VLDL Cholesterol,mg/dl,Derived,7,40
 Haemoglobin,gm %,,13,18
 R.B.C. Count,fomm,,3,6
@@ -5743,5 +5742,10 @@ Mean Corpuscular Hemoglobin(MCH),picogram,,25,35
 NON-HDL Cholesterol,mg/dL,,0,130
 HIV 1,,,,
 HIV 2,,,,
-CHOL / HDL RATIO, , 0.4,9.7
-HBA1C, GLYCATED HEMOGLOBIN, %, 0,10 
+Random Blood Sugar,mg/dl,,,
+Serum cholestrol,mg/dl,,,
+Serum triglyceride,mg/dl,,,
+HbA1c,,,,
+TSH 3rd generation,uIU/mL,ELECTROCHEMILUMINESCENCE,,
+T3,ng/dl,ELECTROCHEMILUMINESCENCE,,
+T4,ug/dL,ELECTROCHEMILUMINESCENCE,,

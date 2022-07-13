@@ -1189,9 +1189,10 @@ class ExtractToJson:
             cummulative_line_startind = cummulative_line_start_forent
             line_no = 0
             for line in lines[line_ind_checked:]:
-                if line not in line_tag_dict.keys():
-                    line_tag_dict[line] = []
                 temp_ent_list = []
+                if line_ind_checked+line_no not in line_tag_dict.keys():
+                    line_tag_dict[line_ind_checked+line_no] = [line]
+                    
                 line_lenght = len(line)
                 line_start , line_end = cummulative_line_startind, cummulative_line_startind+line_lenght
                 if startind >= line_start and startind <=line_end:
@@ -1199,57 +1200,22 @@ class ExtractToJson:
                     rel_endind = rel_starind + len(txt)
                     ent_for_line = (txt, tag, rel_starind, rel_endind)
                     temp_ent_list.append(ent_for_line)
-                    line_ind_checked += line_no
                     tag_found_count +=1
                     cummulative_line_start_forent = line_start                   
                     
-                    line_tag_dict[line].extend(temp_ent_list)
+                    line_tag_dict[line_ind_checked+line_no].extend(temp_ent_list)
+                    line_ind_checked += line_no
                     break
 
                 cummulative_line_startind = line_end+1
                 line_no +=1
         
-        for line in lines:
-            if line not in line_tag_dict.keys():
-                line_tag_dict[line] = []
+        for i, line in enumerate(lines):
+            if i not in line_tag_dict.keys():
+                line_tag_dict[i] = [line]
 
         print(tag_found_count)
         return line_tag_dict
-
-            
-    # def get_tags_per_line(self, page, ent_log):
-    #     line_tag_dict = {}
-    #     used_tags = []
-    #     lines = [self.clean_text(line) for line in page.splitlines()]
-    #     for line in lines:
-    #         tags =[]
-    #         if line != '':
-    #             # # words_in_line = [item for item in re.split(r'(\s+)', line) if item.strip() != '']
-    #             # # print(words_in_line)
-    #             # # for wrd in words_in_line:
-    #             # for tag in ent_log:
-    #             #     if tag[0] in line and tag not in used_tags:
-    #             #         tags.append(tag)
-    #             #         used_tags.append(tag)
-
-    #             # print(tags)
-
-    #             # # first_wrd_ind = page.find(word_in_line[0])
-    #             # # last_wrd_ind = page.find(word_in_line[-1])
-    #             # # tags = [tag for tag in ent_log if tag[1] == wrd for wrd in words_in_line]
-
-    #             line_tag_dict[line] = tags
-
-    #     for line, tags in line_tag_dict.items():
-    #         new_tags = []
-    #         for tag in tags:
-    #             strt = line.find(tag[0])
-    #             end = tag[3] - tag[2]
-    #             new_tag = (tag[0], tag[1], strt, end)
-    #             new_tags.append(new_tag)
-    #         line_tag_dict[line] = new_tags
-
-    #     return line_tag_dict
 
 
     def make_predictions(self, text=None, file_name=None, return_json=False, return_json_path=False):
@@ -1338,9 +1304,17 @@ class ExtractToJson:
             #         doc = self.model(" ".join(item_list))
             #         ent_list = [str(i) for i in doc.ents]
 
-            for line_txt, ents in dict1.items():
+            
+            # for line_txt, ents in dict1.items():
+            
+            for line_no , list_line_ents in dict1.items():
+                if len(list_line_ents) > 1:
+                    ents = list_line_ents[1:]
+                else:
+                    ents = []
+                line_txt = list_line_ents[0]
                 offset = 0
-                item_list = [item for item in re.split(r'(\s+)', line_txt) if item.strip() != '']
+                item_list = [item for item in re.split(r'(\s+)', list_line_ents[0]) if item.strip() != '']
                 ent_list = [str(i[0]) for i in ents]
                 entities = []
 
