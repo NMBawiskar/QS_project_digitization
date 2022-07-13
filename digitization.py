@@ -29,7 +29,7 @@ from scipy.stats import skew
 
 import random
 # from spacy.gold import GoldParse
-from spacy.util import minibatch, compounding, decaying
+# from spacy.util import minibatch, compounding, decaying
 from tqdm import tqdm
 from spacy.scorer import Scorer
 
@@ -42,6 +42,8 @@ import pandas as pd
 import boto3
 import mimetypes
 import textract
+from pdf2image import convert_from_path
+
 
 pd.options.mode.chained_assignment = None
 Image.MAX_IMAGE_PIXELS = None
@@ -301,7 +303,7 @@ class ConvertToTxt:
     
     ###################################### Code to add category in the text ################################
     def add_category(self, final_text_dict):
-        df = pd.read_excel('Category-tests.xlsx')
+        df = pd.read_csv('Category-tests.csv')
         col = ''
         found = False
         
@@ -331,7 +333,7 @@ class ConvertToTxt:
                     
                     final_text_dict[page_no] = page_data[:indx] + '''\n''' + cat.upper() + '''\n''' + page_data[indx:]
 
-        print(final_text_dict)
+        return final_text_dict
 
     def check_tests(self, lines, rows):
         count = 0
@@ -344,7 +346,7 @@ class ConvertToTxt:
             return True
         else:
             return False
-    ######################################
+    ###################################### Code to add category in the text ################################
 
     def process_files(self, files, dpi=900, save_to_txt=False, return_page_count=False, move_file=False):
         """Process a single file or a list of files passed.
@@ -448,7 +450,7 @@ class ConvertToTxt:
                     page_count_dict[k] = len(phase_two_text_dict[k].strip())
 
                 final_text_dict = self.add_category(final_text_dict)
-                print("final_text_dict-----------------------", final_text_dict)
+                
                 output_list.extend([line for page in final_text_dict.values() for line in page.splitlines()])
                 page_count += len(page_count_dict.keys())
                 if len(final_text_dict.keys()) == 0:
@@ -508,15 +510,36 @@ class ConvertToTxt:
 
         return glob(os.path.join(file_path, './*.png'))
 
-    # @staticmethod
-    # def __extract_from_pdf_a(file_path):
-    #     with open(file_path, "rb") as f:
-    #         text = list(pdftotext.PDF(f))
+    @staticmethod
+    def __convert_pdf_to_png_using_pdf2img(pdf_input_path, output_folder, dpi):
+        filename = pdf_input_path.rsplit('/', 1)[1].rsplit('.', 1)[0]
+        file_path = os.path.join(output_folder, filename)
+        
+        images = convert_from_path(pdf_input_path, dpi= dpi, size=(765,990))        
+        
+        os.makedirs(file_path, exist_ok=True)
+        
+        for i in range(len(images)):
+            outFilePath = os.path.join(file_path, filename+"-"+str(i+1)+".png")
+            # resized_img = images[i].resize((765,990))
+            images[i].save(outFilePath, 'PNG')
+            
+        
+        return glob(os.path.join(file_path, './*.png'))
 
-    #     phase_one_pages = dict()
-    #     for page in text:
-    #         phase_one_pages[str(text.index(page))] = page
-    #     return phase_one_pages
+
+
+
+
+    @staticmethod
+    def __extract_from_pdf_a(file_path):
+        with open(file_path, "rb") as f:
+            text = list(pdftotext.PDF(f))
+
+        phase_one_pages = dict()
+        for page in text:
+            phase_one_pages[str(text.index(page))] = page
+        return phase_one_pages
 
     def __savePNGs(self, file_path, dpi):
         global ALLOWED_EXTENSIONS
@@ -524,7 +547,7 @@ class ConvertToTxt:
         image_ext.remove('pdf')
         if file_path.rsplit('.', 1)[-1].lower() == 'pdf':
             temp_path = os.path.join(os.getcwd(), "Reports", "extracted_png")
-            pages = self.__convert_pdf_to_png(file_path, dpi=dpi, output_folder=os.path.join(temp_path, self.folder_structure))
+            pages = self.__convert_pdf_to_png_using_pdf2img(file_path, dpi=900, output_folder=os.path.join(temp_path, self.folder_structure))
             pages = sorted(pages, key=lambda x: float(x.rsplit('-', 1)[-1].rsplit('.', 1)[0]))
         elif file_path.rsplit('.', 1)[-1] in image_ext:
             pages = [file_path]
@@ -543,12 +566,13 @@ class ConvertToTxt:
     def __extract_from_textract(self, file_path, dpi):
         print('File Path ------> ', file_path)
         self.__savePNGs(file_path, dpi)
-
+        print("Pngs saved....")
+        ## Nilesh's edit  removed threading for below functio
         t = Thread(target=textract.extract_main, args=[file_path])
         t.start()
         while t.isAlive():
             pass
-        
+        #textract.extract_main(file_path)
         print("RESPONSE DICT ----> ", textract.pages_dict)
         return textract.pages_dict
 
@@ -898,7 +922,7 @@ class ExtractToJson:
     else:
         __model_dir = None
 
-    def __init__(self, model_directory=None, file_directory=None):
+    def __init__spacy2(self, model_directory=None, file_directory=None):
         spacy.prefer_gpu()
         if model_directory is not None:
             self.__model_dir = model_directory
@@ -912,16 +936,29 @@ class ExtractToJson:
         # __directory = r'spacy_model'
         __all_subdirs = os.listdir(self.__model_dir)
         __latest_subdir = os.path.join(self.__model_dir, max(__all_subdirs))
-        # self.__model = self.__load_model_(__latest_subdir)
+        self.__model = self.__load_model(__latest_subdir)
         self.match_finder = MatchFinder(enable_logging=False)
-        
-        self.model1 = self.__load_model(os.path.join(configuration.get('digitization', 'model_directory'),'Spacy3model-1'))
-        self.model2  = self.__load_model(os.path.join(configuration.get('digitization', 'model_directory'),'Spacy3model-1'))
-        # self.model2  = self.__load_model(os.path.join(configuration.get('digitization', 'model_directory'),'Spacy3model-2'))
+
+    def __init__(self, model_directory=None, file_directory=None):
+        spacy.prefer_gpu()
+        if model_directory is not None:
+            self.__model_dir = model_directory
+        elif self.__model_dir is None:
+            raise FileNotFoundError('Model __directory cannot be null!')
+        if file_directory is None:
+            raise FileNotFoundError('File __directory cannot be null!')
+        self.__file_directory = file_directory
+
+        self.match_finder = MatchFinder(enable_logging=False)
+
+        # self.model = self.__load_model(os.path.join(configuration.get('digitization', 'model_directory'),'Spacy3model-1'))
+        # self.model2 = self.__load_model(os.path.join(configuration.get('digitization', 'model_directory'),'Spacy3model-2'))
+
+        self.model = self.__load_model(os.path.join(configuration.get('digitization', 'model_directory'),'Spacy3model'))
         print("Models loaded successfully")
 
     @staticmethod
-    def __load_model_(model_path):
+    def __load_model_spacy2(model_path):
         """ Loads a pre-trained model for prediction on new test sentences
 
         model_path : directory of model saved by spacy.to_disk
@@ -934,9 +971,11 @@ class ExtractToJson:
         ner = nlp.from_disk(model_path)
         return ner
 
+    
     def __load_model(self, model_path):
         nlp_model = spacy.load(model_path) 
         return nlp_model
+
 
     @staticmethod
     def clean_text(text):
@@ -945,8 +984,8 @@ class ExtractToJson:
         text = re.sub(r'less than', r' 0-', text, flags=re.I)  # Replace 'less than' with '0-
         text = re.sub(r'\s+up?\s*to\s+', r' 0-', text, flags=re.I)  # Replace 'upto' with '0-
         text = re.sub(r'\s(\.[0-9]+)\s', r'0\1', text, flags=re.I)  # Change .[decimal] to 0.[decimal]
-        text = re.sub(r'([0-9.]+)\s*[-~]\s*([0-9.]+)', r'\1-\2',
-                      text)  # Convert [number] [-~] [number] to [number]-[number]
+        text = re.sub(r'([0-9.]+)\s*[-~]\s*([0-9.]+)', r'\1-\2', text)  # Convert [number] [-~] [number] to [number]-[number]
+
         # text = re.sub(r'\s[^\w%<>]\s', r' ', ' ' + text + ' ')  # Remove single special characters except %<>
         # text = re.sub(r'\s[a-wy-zA-WY-Z_]\s', r' ', text)  # Remove single alphabets except xX
         # text = re.sub(r'\s[a-wy-zA-WY-Z_]\s', r' ', text)  # Remove single alphabets except xX again
@@ -956,227 +995,9 @@ class ExtractToJson:
         # text = re.sub(r'\s+', r' ', text).strip()  # Remove extra spaces
         # if len(text.split()) == 1:
         #     text = ''
-        text = text.replace(':','')
         return text
-    
-    def make_predictions(self, text=None, file_name=None, return_json=False, return_json_path=False):
 
-        def escape_text(og_text):
-            og_text = og_text.replace('\\', r'\\')
-            og_text = og_text.replace('(', r'\(')
-            og_text = og_text.replace(')', r'\)')
-            og_text = og_text.replace('[', r'\[')
-            og_text = og_text.replace('|', r'\|')
-            og_text = og_text.replace(']', r'\]')
-            og_text = og_text.replace('*', r'\*')
-            og_text = og_text.replace('.', r'\.')
-            og_text = og_text.replace('}', r'\}')
-            og_text = og_text.replace('{', r'\{')
-            og_text = og_text.replace('+', r'\+')
-            og_text = og_text.replace('?', r'\?')
-            og_text = og_text.replace('$', r'\$')
-            og_text = og_text.replace('^', r'\^')
-            return og_text
-
-        __patient_data = dict()
-        __predictions = list()
-        doc_words = list()
-        doc_tags = list()
-        start = time.time()
-        page_wise_dict = dict()
-        tag_list_model1 = ['PERSON', 'DATE', 'AGE', 'DPR', 'SEX', 'CAT', 'TST', 'RES', 'REF', 'UNT', 'DPR', 'MTD']
-        # tag_list_model2 = ['CAT', 'TST', 'RES', 'REF', 'UNT', 'DPR', 'MTD']
-        
-        html_data = dict()
-
-        for page_idx, page in enumerate(text.values()):
-            lines = ""
-            test_idx = 0
-            for line in page.splitlines():
-                entities =[]
-                line = self.clean_text(line)
-                if line != '':
-                    html_line = line
-                    offset = 0
-
-                    ################################## Used spacy3 nlp models ###########################################
-                    doc = self.model1(" ".join([item for item in re.split(r'(\s+)', line) if item.strip() != '']))
-                    doc2 = self.model2(" ".join([item for item in re.split(r'(\s+)', line) if item.strip() != '']))
-                    entities1 = [(ent.text, ent.label_, ent.start_char, ent.end_char) for ent in doc.ents]
-                    entities2 = [(ent.text, ent.label_, ent.start_char, ent.end_char) for ent in doc2.ents]
-
-                    L1 = [entity for entity in entities1 if entity[1] in tag_list_model1]
-                    L2 = [entity for entity in entities2 if entity[1] in tag_list_model1]
-                    entities.extend(L1)
-                    entities.extend(L2)
-                    #########################################
-
-                    ############# Micro corrections to the tag and words ##############
-                    get_suggestion_data = dict()
-                    for entity in entities:
-                        if entity[1] == 'RES' and entity[0].lower().strip() == 'o':
-                            entity[0] = 0
-                        spacious_entity = re.sub(" ", r"\s+", escape_text(entity[0]))
-                        re_matches = re.findall(fr"{spacious_entity}", line)
-                        space_insensitive_matching = re_matches[0] if len(re_matches) > 0 else '-'
-                        if entity[1] == 'TST' or entity[1] == 'CAT' or entity[1] == 'DPR' or entity[1] == 'PER' or \
-                            entity[1] == 'AGE' or entity[1] == 'SEX' or entity[1] == 'DTE' or entity[1] == 'DCN':
-                            test_idx += 1
-                        if entity[1] != 'O':
-                            if entity[1] == 'TST' or entity[1] == 'REF' or entity[1] == 'UNT' or entity[1] == 'MTD':
-                                get_suggestion_data[entity[1]] = space_insensitive_matching
-                            if entity[1] == 'TST' or entity[1] == 'RES' or entity[1] == 'REF' or entity[1] == 'UNT' or \
-                                    entity[1] == 'MTD' or entity[1] == 'CAT':
-                                if entity[1] == 'TST':
-                                    tagged_line = f"""<mark class="noselect html-test-item {test_idx}" id="{test_idx}" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle pb-1\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i><i class=\"fas fa-trash\" style=\'color: red;\' onclick=\"deleteSet(this);\"></i></div></div></mark>"""
-                                else:
-                                    tagged_line = f"""<mark class="noselect html-test-item {test_idx}" id="{test_idx}" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i></div></div></mark>"""
-                            else:
-                                tagged_line = f"""<mark class="noselect html-test-item {test_idx}" id="{test_idx}" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i></div></div></mark>"""
-                            html_line = html_line[:entity[2] + offset] + html_line[entity[2] + offset:].replace(space_insensitive_matching, tagged_line, 1)
-                            offset += len(tagged_line) - len(space_insensitive_matching)
-
-                    ############# Check Lavenstein's distances and replace from csv file ##############
-
-                    if len(get_suggestion_data.items()) > 0:
-                        suggs = self.match_finder.find_top_n_matches(get_suggestion_data)
-                        if suggs is not None and len(suggs.keys()) > 0:
-                            suggs = suggs.head(1)
-                            suggs = suggs.to_dict()
-                            suggs.pop('LCL', None)
-                            suggs.pop('UCL', None)
-                            for tag, val in suggs.items():
-                                r_text = list(val.values())
-                                if len(r_text) > 0 and r_text[0] != '':
-                                    html_line = re.sub(fr'(data-entity="{tag.lower()}">)[\w\W]+?(</span>)', fr'\1<span class="text">{r_text[0]}</span>\2', html_line)
-                    lines += html_line + "\n"
-            html_data[page_idx + 1] = lines
-
-        if len(file_name.rsplit('.', 1)[0].replace("\\", "/").rsplit('/', 1)) > 1:
-            folder_structure = file_name.rsplit('.', 1)[0].replace("\\", "/").rsplit('/', 1)[0]
-        else:
-            folder_structure = ''
-
-        os.makedirs(os.path.join('Reports/extracted_html_files', folder_structure.replace("\\", "/")), exist_ok=True)
-
-        with open(os.path.join('Reports/extracted_html_files', file_name.rsplit('.', 1)[0]).replace("\\", "/") + ".json", 'w') as f:
-            json.dump(html_data, f, indent=4)
-        
-
-        os.makedirs(os.path.join('Reports/extracted_html_files_bak', folder_structure), exist_ok=True)
-
-        with open(os.path.join('Reports/extracted_html_files_bak', file_name.rsplit('.', 1)[0]) + ".json", 'w') as f:
-            json.dump(html_data, f, indent=4)
-        ##### creation of HTML file
-        # 
-        #  
-
-        ##############################################
-        #### As below extracted json would not be going to be used anywhere, so lines are commented
-        '''
-        for key, file_content in text.items():
-            for line in file_content.splitlines():
-                cleaned_line = self.clean_text(line)
-                if cleaned_line != '':
-                    words_line = ''
-                    tags_line = ''
-                    doc = model1(cleaned_line)
-                    doc2 = model2(cleaned_line)
-                    entities1 = [(ent.text, ent.label_, ent.start_char, ent.end_char) for ent in doc.ents]
-                    entities2 = [(ent.text, ent.label_, ent.start_char, ent.end_char) for ent in doc2.ents]
-
-                    L1 = [entity for entity in entities1 if entity[1] in tag_list_model1]
-                    L2 = [entity for entity in entities2 if entity[1] in tag_list_model2]
-                    entities.extend(L1)
-                    entities.extend(L2)
-
-                    for entity in entities:
-                        word_line, tag_line, stIndex, endIndex = entity
-                        item_words = word_line.split()
-                        if tag_line.strip() == 'O':
-                            item_tag = ''
-                            item_tag += ' O' * len(item_words)
-                        else:
-                            item_tag = ' B-' + tag_line
-                            item_tag += (' I-' + tag_line) * (len(item_words) - 1)
-                        words_line += ' ' + word_line.strip()
-                        tags_line += ' ' + item_tag.strip()
-                    doc_words.extend(words_line.split())
-                    doc_tags.extend(tags_line.split())
-
-            currently_active_tag = None
-            active_start_pos = -1
-            active_end_pos = -1
-            detected_tags = list()
-            for idx, tag in enumerate(doc_tags):
-                tag_type = tag.split('-')[-1]
-                if tag_type != currently_active_tag:
-                    if currently_active_tag is not None:
-                        detected_tags.append(dict(tagType=currently_active_tag,
-                                                    text=" ".join(doc_words[active_start_pos: active_end_pos + 1]),
-                                                    startPos=active_start_pos, endPos=active_end_pos))
-                    currently_active_tag = tag_type
-                    active_start_pos = idx
-                    active_end_pos = idx
-                else:
-                    active_end_pos = idx
-
-            if currently_active_tag is not None:
-                detected_tags.append(dict(tagType=currently_active_tag,
-                                            text=" ".join(doc_words[active_start_pos: active_end_pos + 1]),
-                                            startPos=active_start_pos, endPos=active_end_pos))
-
-            detected_tags = list(filter(lambda x: x['tagType'] != 'O', detected_tags))
-
-
-            if 'TST' in [tag['tagType'] for tag in detected_tags] and 'CAT' not in [tag['tagType'] for tag in detected_tags]:
-                detected_tags.append({})
-
-            meta_data_tags = ['PER', 'SEX', 'AGE', 'DPR', 'DCN', 'DTE']
-            stop_tags = meta_data_tags + ['TST', 'CAT']
-
-            test_list = list()
-            test_item = TestItem()
-            currently_active_tag = None
-            for tag in detected_tags:
-                if tag['tagType'] in stop_tags:
-                    currently_active_tag = tag['tagType']
-                    if test_item is not None and not test_item.is_empty():
-                        if test_item.get_category_name() != '':
-                            test_item.set_type(TestItemType.CATEGORY)
-
-                        test_item = test_item.to_dict()
-                        if test_item is not None:
-                            test_list.append(test_item)
-                    test_item = TestItem()
-                if currently_active_tag in meta_data_tags:
-                    self.__process_meta_data(currently_active_tag, tag['text'], __patient_data)
-                else:
-                    test_item.set_data(tag['tagType'], tag['text'])
-
-            test_item = test_item.to_dict()
-            if test_item is not None:
-                test_list.append(test_item)
-
-            page_wise_dict[key] = test_list
-
-        end = time.time()
-        print(end - start)
-        __patient_data['TESTS'] = page_wise_dict
-        os.makedirs('Reports/extracted_json_files', exist_ok=True)
-        os.makedirs(os.path.join('Reports/extracted_json_files/', folder_structure), exist_ok=True)
-
-        file_path = os.path.join('Reports/extracted_json_files', file_name.rsplit('.', 1)[0] + ".json")
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(json.dumps(__patient_data, indent=4))
-        if return_json and return_json_path:
-            return __patient_data, file_path
-        elif return_json:
-            return __patient_data
-        elif return_json_path:
-            return file_path
-        '''
-    def make_predictions_(self, text=None, file_name=None, return_json=False, return_json_path=False):
+    def make_predictions_spacy2(self, text=None, file_name=None, return_json=False, return_json_path=False):
 
         def escape_text(og_text):
             og_text = og_text.replace('\\', r'\\')
@@ -1219,7 +1040,8 @@ class ExtractToJson:
                         spacious_entity = re.sub(" ", r"\s+", escape_text(entity[0]))
                         re_matches = re.findall(fr"{spacious_entity}", line)
                         space_insensitive_matching = re_matches[0] if len(re_matches) > 0 else '-'
-                        if entity[1] == 'TST' or entity[1] == 'CAT':
+                        if entity[1] == 'TST' or entity[1] == 'CAT' or entity[1] == 'DPR' or entity[1] == 'PER' or \
+                            entity[1] == 'AGE' or entity[1] == 'SEX' or entity[1] == 'DTE' or entity[1] == 'DCN':
                             test_idx += 1
                         if entity[1] != 'O':
                             if entity[1] == 'TST' or entity[1] == 'REF' or entity[1] == 'UNT' or entity[1] == 'MTD':
@@ -1231,7 +1053,7 @@ class ExtractToJson:
                                 else:
                                     tagged_line = f"""<mark class="noselect html-test-item {test_idx}" id="{test_idx}" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i></div></div></mark>"""
                             else:
-                                tagged_line = f"""<mark class="noselect" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i></div></div></mark>"""
+                                tagged_line = f"""<mark class="noselect html-test-item {test_idx}" id="{test_idx}" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i></div></div></mark>"""
                             html_line = html_line[:entity[2] + offset] + html_line[entity[2] + offset:].replace(space_insensitive_matching, tagged_line, 1)
                             offset += len(tagged_line) - len(space_insensitive_matching)
 
@@ -1354,6 +1176,272 @@ class ExtractToJson:
         elif return_json_path:
             return file_path
 
+
+    def linewise_tags(self, page, ent_log):
+        line_tag_dict = {}
+        lines = [self.clean_text(line) for line in page.splitlines()]
+        line_ind_checked = 0
+        tag_found_count = 0
+        cummulative_line_start_forent = 0
+        for ent in ent_log:
+            txt, tag, startind, endind = ent
+            
+            cummulative_line_startind = cummulative_line_start_forent
+            line_no = 0
+            for line in lines[line_ind_checked:]:
+                if line not in line_tag_dict.keys():
+                    line_tag_dict[line] = []
+                temp_ent_list = []
+                line_lenght = len(line)
+                line_start , line_end = cummulative_line_startind, cummulative_line_startind+line_lenght
+                if startind >= line_start and startind <=line_end:
+                    rel_starind = startind-cummulative_line_startind
+                    rel_endind = rel_starind + len(txt)
+                    ent_for_line = (txt, tag, rel_starind, rel_endind)
+                    temp_ent_list.append(ent_for_line)
+                    line_ind_checked += line_no
+                    tag_found_count +=1
+                    cummulative_line_start_forent = line_start                   
+                    
+                    line_tag_dict[line].extend(temp_ent_list)
+                    break
+
+                cummulative_line_startind = line_end+1
+                line_no +=1
+        print(tag_found_count)
+        return line_tag_dict
+
+            
+    # def get_tags_per_line(self, page, ent_log):
+    #     line_tag_dict = {}
+    #     used_tags = []
+    #     lines = [self.clean_text(line) for line in page.splitlines()]
+    #     for line in lines:
+    #         tags =[]
+    #         if line != '':
+    #             # # words_in_line = [item for item in re.split(r'(\s+)', line) if item.strip() != '']
+    #             # # print(words_in_line)
+    #             # # for wrd in words_in_line:
+    #             # for tag in ent_log:
+    #             #     if tag[0] in line and tag not in used_tags:
+    #             #         tags.append(tag)
+    #             #         used_tags.append(tag)
+
+    #             # print(tags)
+
+    #             # # first_wrd_ind = page.find(word_in_line[0])
+    #             # # last_wrd_ind = page.find(word_in_line[-1])
+    #             # # tags = [tag for tag in ent_log if tag[1] == wrd for wrd in words_in_line]
+
+    #             line_tag_dict[line] = tags
+
+    #     for line, tags in line_tag_dict.items():
+    #         new_tags = []
+    #         for tag in tags:
+    #             strt = line.find(tag[0])
+    #             end = tag[3] - tag[2]
+    #             new_tag = (tag[0], tag[1], strt, end)
+    #             new_tags.append(new_tag)
+    #         line_tag_dict[line] = new_tags
+
+    #     return line_tag_dict
+
+
+    def make_predictions(self, text=None, file_name=None, return_json=False, return_json_path=False):
+
+        def escape_text(og_text):
+            og_text = og_text.replace('\\', r'\\')
+            og_text = og_text.replace('(', r'\(')
+            og_text = og_text.replace(')', r'\)')
+            og_text = og_text.replace('[', r'\[')
+            og_text = og_text.replace('|', r'\|')
+            og_text = og_text.replace(']', r'\]')
+            og_text = og_text.replace('*', r'\*')
+            og_text = og_text.replace('.', r'\.')
+            og_text = og_text.replace('}', r'\}')
+            og_text = og_text.replace('{', r'\{')
+            og_text = og_text.replace('+', r'\+')
+            og_text = og_text.replace('?', r'\?')
+            og_text = og_text.replace('$', r'\$')
+            og_text = og_text.replace('^', r'\^')
+            return og_text
+
+        # tag_list_model1 = ['PERSON', 'DATE', 'AGE', 'DPR', 'SEX'] 
+        # tag_list_model2 = ['CAT', 'TST', 'RES', 'REF', 'UNT', 'DPR', 'MTD']
+        
+        html_data = dict()
+
+        for page_idx, page in enumerate(text.values()):
+            lines = ""
+            test_idx = 0
+            new_page = page
+            value = self.clean_text(page)
+
+            # doc1 = self.model(value)
+            # ent_log1 = [(ent.text, ent.label_, ent.start_char, ent.end_char) for ent in doc1.ents]
+
+            # for ent1 in ent_log1:
+            #     if 'REF' in ent1[1] :
+            #         list_of_words = ent1[0].split(' ')
+            #         list_wrd_to_replace = []
+            #         for word_to_chk in list_of_words:
+            #             suggested = self.match_finder.match_finder_ref({'REF': word_to_chk})
+            #             if suggested is not None:
+            #                 suggested = suggested.to_list()[0]
+            #                 list_wrd_to_replace.append(suggested)
+            #             else:
+            #                 list_wrd_to_replace.append(word_to_chk)
+                    
+            #         word_to_replace = " ".join(list_wrd_to_replace)
+
+            #         if len(word_to_replace) > len(ent1[0]):
+            #             first_half = page[:ent1[2]]
+            #             first_half = first_half + (len(word_to_replace)- len(ent1[0]))*' '
+            #             new_page = first_half + page[ent1[2]:]
+            #             page_partition = list(new_page.partition(page[ent1[2]:ent1[2]+len(word_to_replace)]))
+            #             page_partition[1] = word_to_replace
+            #             new_page = ''.join(page_partition)
+            #         elif len(word_to_replace) < len(ent1[0]):
+            #             first_half = page[:ent1[3]]
+            #             diff = len(ent1[0]) - len(word_to_replace)
+            #             first_half = first_half[:-1*diff]
+            #             new_page = first_half + page[ent1[2]:]
+            #             page_partition = list(new_page.partition(page[ent1[2]:ent1[2]+len(word_to_replace)]))
+            #             page_partition[1] = word_to_replace
+            #             new_page = ''.join(page_partition)
+            #         else:
+            #             page_partition = list(new_page.partition(page[ent1[2]:ent1[3]]))
+            #             page_partition[1] = word_to_replace
+            #             new_page = ''.join(page_partition)
+
+            # print("new_page-----------", new_page)
+
+            doc = self.model(value)
+            ent_log = [(ent.text, ent.label_, ent.start_char, ent.end_char) for ent in doc.ents]
+
+
+            dict1 = self.linewise_tags(page, ent_log)
+
+            # for line in page.splitlines():
+            #     entities =[]
+            #     line = self.clean_text(line)
+            #     if line != '':
+            #         html_line = line
+            #         offset = 0
+
+            #         item_list = [item for item in re.split(r'(\s+)', line) if item.strip() != '']
+            #         doc = self.model(" ".join(item_list))
+            #         ent_list = [str(i) for i in doc.ents]
+
+            for line_txt, ents in dict1.items():
+                offset = 0
+                item_list = [item for item in re.split(r'(\s+)', line_txt) if item.strip() != '']
+                ent_list = [str(i[0]) for i in ents]
+                entities = []
+
+                for ent in ents:
+                    tagtxt, tag, startind, endind = ent
+                    if tag == 'PERSON':
+                        label_to_add = 'PER'
+                    elif tag == 'DATE':
+                        label_to_add = 'DTE'
+                    else: 
+                        label_to_add = tag
+
+                    if  tag == 'REF' and '-' not in tagtxt.strip():
+                        refc = tagtxt.strip().split()
+                        txt_ref = ""
+                        for i, value in enumerate(refc):
+                            if i > 0:
+                                if value.isalpha() or refc[i-1].isalpha():
+                                    pass
+                                else :
+                                    txt_ref += "-"
+                                    
+                            txt_ref += value + " "
+
+                        txt_to_add = txt_ref
+                        line_txt = line_txt.replace(tagtxt, txt_to_add)
+                    else:
+                        txt_to_add = tagtxt
+
+                    t1 = (txt_to_add, label_to_add, startind, endind)
+
+                    entities.append(t1)
+
+
+                if 'TST' in [i[1] for i in ents] and 'RES' not in [i[1] for i in ents]:
+                    for item in item_list:
+                        if item not in ent_list and str(item).lower().strip() == 'o':
+                            ind = item_list.index(item)
+                            strtind = line_txt.index('o')
+                            endind = strtind + 1
+                            txt_to_add = '0'
+                            label_to_add = 'RES'
+                            line_txt = line_txt.replace(str(item), txt_to_add)
+
+                            t1 = (txt_to_add, label_to_add, strtind, endind)
+                            entities.insert(ind, t1)
+                    
+                html_line = line_txt
+
+                ############# Micro corrections to the tag and words ##############
+                get_suggestion_data = dict()
+                for entity in entities:
+                    spacious_entity = re.sub(" ", r"\s+", escape_text(entity[0]))
+                    re_matches = re.findall(fr"{spacious_entity}", line_txt)
+                    space_insensitive_matching = re_matches[0] if len(re_matches) > 0 else '-'
+                    if entity[1] == 'TST' or entity[1] == 'CAT' or entity[1] == 'DPR' or entity[1] == 'PER' or \
+                        entity[1] == 'AGE' or entity[1] == 'SEX' or entity[1] == 'DTE' or entity[1] == 'DCN':
+                        test_idx += 1
+                    if entity[1] != 'O':
+                        if entity[1] == 'TST' or entity[1] == 'REF' or entity[1] == 'UNT' or entity[1] == 'MTD':
+                            get_suggestion_data[entity[1]] = space_insensitive_matching
+                        if entity[1] == 'TST' or entity[1] == 'RES' or entity[1] == 'REF' or entity[1] == 'UNT' or \
+                                entity[1] == 'MTD' or entity[1] == 'CAT':
+                            if entity[1] == 'TST':
+                                tagged_line = f"""<mark class="noselect html-test-item {test_idx}" id="{test_idx}" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle pb-1\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i><i class=\"fas fa-trash\" style=\'color: red;\' onclick=\"deleteSet(this);\"></i></div></div></mark>"""
+                            else:
+                                tagged_line = f"""<mark class="noselect html-test-item {test_idx}" id="{test_idx}" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i></div></div></mark>"""
+                        else:
+                            tagged_line = f"""<mark class="noselect html-test-item {test_idx}" id="{test_idx}" data-entity="{entity[1].lower()}"><span class="text">{space_insensitive_matching}</span><div class=\'hover-options\'><div style="display: flex; flex-direction: column;"><i class=\"fas fa-times-circle\" style=\'color: red;\' onclick=\"deleteTag(this);\"></i></div></div></mark>"""
+                        html_line = html_line[:entity[2] + offset] + html_line[entity[2] + offset:].replace(space_insensitive_matching, tagged_line, 1)
+                        offset += len(tagged_line) - len(space_insensitive_matching)
+
+                ############# Check Lavenstein's distances and replace from csv file ##############
+
+                if len(get_suggestion_data.items()) > 0:
+                    suggs = self.match_finder.find_top_n_matches(get_suggestion_data)
+                    if suggs is not None and len(suggs.keys()) > 0:
+                        suggs = suggs.head(1)
+                        suggs = suggs.to_dict()
+                        suggs.pop('LCL', None)
+                        suggs.pop('UCL', None)
+                        for tag, val in suggs.items():
+                            r_text = list(val.values())
+                            if len(r_text) > 0 and r_text[0] != '':
+                                html_line = re.sub(fr'(data-entity="{tag.lower()}">)[\w\W]+?(</span>)', fr'\1<span class="text">{r_text[0]}</span>\2', html_line)
+                lines += html_line + "\n"
+            html_data[page_idx + 1] = lines
+
+        if len(file_name.rsplit('.', 1)[0].replace("\\", "/").rsplit('/', 1)) > 1:
+            folder_structure = file_name.rsplit('.', 1)[0].replace("\\", "/").rsplit('/', 1)[0]
+        else:
+            folder_structure = ''
+
+        os.makedirs(os.path.join('Reports/extracted_html_files', folder_structure.replace("\\", "/")), exist_ok=True)
+
+        with open(os.path.join('Reports/extracted_html_files', file_name.rsplit('.', 1)[0]).replace("\\", "/") + ".json", 'w') as f:
+            json.dump(html_data, f, indent=4)
+        
+
+        os.makedirs(os.path.join('Reports/extracted_html_files_bak', folder_structure), exist_ok=True)
+
+        with open(os.path.join('Reports/extracted_html_files_bak', file_name.rsplit('.', 1)[0]) + ".json", 'w') as f:
+            json.dump(html_data, f, indent=4)
+
+
+
     def __process_meta_data(self, tag, text, __patient_data):
         if tag in ['PER', 'DPR', 'SEX'] and self.__is_number(text):
             return
@@ -1396,118 +1484,117 @@ class ExtractToJson:
             return False
 
 
-class Trainer:
+# class Trainer:
 
-    def __init__(self, dataset_dir='datasets'):
-        spacy.prefer_gpu()
-        self.dataset_dir = dataset_dir
-        self.nlp = spacy.load('en_core_web_sm')
-        self.ner = self.nlp.get_pipe("ner")
-        self.optimizer = self.nlp.begin_training()
-        self.phrase_list = list()
-        print("Ready to load data...")
+#     def __init__(self, dataset_dir='datasets'):
+#         spacy.prefer_gpu()
+#         self.dataset_dir = dataset_dir
+#         self.nlp = spacy.load('en_core_web_sm')
+#         self.ner = self.nlp.get_pipe("ner")
+#         self.optimizer = self.nlp.begin_training()
+#         self.phrase_list = list()
+#         print("Ready to load data...")
 
-    @staticmethod
-    def find_files_recursively(dir_path):
-        files_to_process = list()
-        for root, dirs, files in os.walk(dir_path):
-            for file in files:
-                files_to_process.append(os.path.join(root, file))
-        return files_to_process
+#     @staticmethod
+#     def find_files_recursively(dir_path):
+#         files_to_process = list()
+#         for root, dirs, files in os.walk(dir_path):
+#             for file in files:
+#                 files_to_process.append(os.path.join(root, file))
+#         return files_to_process
 
-    def load_datasets(self, dataset_dirs=None, data_files=None, tags_to_ignore=None):
-        if tags_to_ignore is None:
-            tags_to_ignore = []
+#     def load_datasets(self, dataset_dirs=None, data_files=None, tags_to_ignore=None):
+#         if tags_to_ignore is None:
+#             tags_to_ignore = []
 
-        files = []
-        if dataset_dirs is None and data_files is None:
-            raise ValueError("Please pass either dataset_dirs or data_files")
-        if dataset_dirs is not None:
-            for dataset_dir in dataset_dirs:
-                files.append(self.find_files_recursively(os.path.join(os.getcwd(), dataset_dir)))
-        if data_files is not None:
-            files = data_files
+#         files = []
+#         if dataset_dirs is None and data_files is None:
+#             raise ValueError("Please pass either dataset_dirs or data_files")
+#         if dataset_dirs is not None:
+#             for dataset_dir in dataset_dirs:
+#                 files.append(self.find_files_recursively(os.path.join(os.getcwd(), dataset_dir)))
+#         if data_files is not None:
+#             files = data_files
 
-        print(f"Found {len(files)} files.")
-        for file in files:
-            all_words_and_tags = open(file.rsplit('.', 1)[0] + ".txt", 'r').readlines()
-            with tqdm(total=len(all_words_and_tags)) as pbar:
-                for words_tag in all_words_and_tags:
-                    word_tag_split = words_tag.split("    ")
-                    if len(word_tag_split) == 3:
-                        sentence = word_tag_split[0].strip()
-                        word = word_tag_split[1].strip()
-                        tag = word_tag_split[2]
-                        split_words = word.strip().split("   ")
-                        split_tags = tag.strip().split(" ")
-                        start = 0
-                        entities_list = list()
-                        ignore_line = False
-                        for idx, pair in enumerate(zip(split_words, split_tags)):
-                            index = sentence.find(pair[0], start)
-                            last_index = index + len(pair[0])
-                            start = index + len(pair[0])
-                            if pair[1] not in tags_to_ignore:
-                                entities_list.append((index, last_index, pair[1]))
-                            else:
-                                ignore_line = True
-                        if not ignore_line:
-                            entities = (sentence, {'entities': entities_list})
-                            self.phrase_list.append(entities)
-                    pbar.update(1)
-        self.__annotate_data()
+#         print(f"Found {len(files)} files.")
+#         for file in files:
+#             all_words_and_tags = open(file.rsplit('.', 1)[0] + ".txt", 'r').readlines()
+#             with tqdm(total=len(all_words_and_tags)) as pbar:
+#                 for words_tag in all_words_and_tags:
+#                     word_tag_split = words_tag.split("    ")
+#                     if len(word_tag_split) == 3:
+#                         sentence = word_tag_split[0].strip()
+#                         word = word_tag_split[1].strip()
+#                         tag = word_tag_split[2]
+#                         split_words = word.strip().split("   ")
+#                         split_tags = tag.strip().split(" ")
+#                         start = 0
+#                         entities_list = list()
+#                         ignore_line = False
+#                         for idx, pair in enumerate(zip(split_words, split_tags)):
+#                             index = sentence.find(pair[0], start)
+#                             last_index = index + len(pair[0])
+#                             start = index + len(pair[0])
+#                             if pair[1] not in tags_to_ignore:
+#                                 entities_list.append((index, last_index, pair[1]))
+#                             else:
+#                                 ignore_line = True
+#                         if not ignore_line:
+#                             entities = (sentence, {'entities': entities_list})
+#                             self.phrase_list.append(entities)
+#                     pbar.update(1)
+#         self.__annotate_data()
 
-    # def __annotate_data(self):
-    #     print("Annotating data...")
-    #     for _, annotations in self.phrase_list:
-    #         for ent in annotations.get("entities"):
-    #             self.ner.add_label(ent[2])
-    #     print("Ready to begin training...")
+#     def __annotate_data(self):
+#         print("Annotating data...")
+#         for _, annotations in self.phrase_list:
+#             for ent in annotations.get("entities"):
+#                 self.ner.add_label(ent[2])
+#         print("Ready to begin training...")
 
-    # @staticmethod
-    # def __evaluate(ner_model, examples):
-    #     scorer = Scorer()
-    #     for input_, annot in examples:
-    #         doc_gold_text = ner_model.make_doc(input_)
-    #         text_entities = []
-    #         for entity in annot.get('entities'):
-    #             text_entities.append(entity)
-    #         gold = GoldParse(doc_gold_text, entities=text_entities)
-    #         pred_value = ner_model(input_)
-    #         scorer.score(pred_value, gold)
-    #     return scorer.scores
+#     @staticmethod
+#     def __evaluate(ner_model, examples):
+#         scorer = Scorer()
+#         for input_, annot in examples:
+#             doc_gold_text = ner_model.make_doc(input_)
+#             text_entities = []
+#             for entity in annot.get('entities'):
+#                 text_entities.append(entity)
+#             gold = GoldParse(doc_gold_text, entities=text_entities)
+#             pred_value = ner_model(input_)
+#             scorer.score(pred_value, gold)
+#         return scorer.scores
 
-    # @staticmethod
-    # def __split_train_test(phrase_list, ratio):
-    #     train_set = phrase_list[:int(len(phrase_list) * ratio)]
-    #     test_set = phrase_list[int(len(phrase_list) * ratio) + 1:]
-    #     return train_set, test_set
+#     @staticmethod
+#     def __split_train_test(phrase_list, ratio):
+#         train_set = phrase_list[:int(len(phrase_list) * ratio)]
+#         test_set = phrase_list[int(len(phrase_list) * ratio) + 1:]
+#         return train_set, test_set
 
+#     def train(self, epochs=10, split_ratio=0.90):
+#         pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
+#         unaffected_pipes = [pipe for pipe in self.nlp.pipe_names if pipe not in pipe_exceptions]
 
-    # def train(self, epochs=10, split_ratio=0.90):
-    #     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    #     unaffected_pipes = [pipe for pipe in self.nlp.pipe_names if pipe not in pipe_exceptions]
-
-    #     with self.nlp.disable_pipes(*unaffected_pipes):
-    #         for itn in range(epochs):
-    #             random.shuffle(self.phrase_list)
-    #             train_set, test_set = self.__split_train_test(self.phrase_list, split_ratio)
-    #             losses = {}
-    #             batches = minibatch(train_set, size=compounding(4.0, 128.0, 1.005))
-    #             drop_rate = decaying(0.6, 0.2, 1e-4)
-    #             with tqdm(total=len(train_set)) as pbar:
-    #                 for batch in batches:
-    #                     texts, annotations = zip(*batch)
-    #                     try:
-    #                         self.nlp.update(texts, annotations, sgd=self.optimizer, drop=next(drop_rate), losses=losses)
-    #                         pbar.update(len(texts))
-    #                     except Exception as e:
-    #                         print(e, list(zip(texts, annotations)))
-    #             eval_metrics = self.__evaluate(self.nlp, test_set)
-    #             entity_metrics = eval_metrics['ents_per_type']
-    #             print("Evaluating EPOCH {itn + 1} on {len(test_set)} records...\nEvaluation metrics:")
-    #             for tag, nth_entity_metric in entity_metrics.items():
-    #                 print(f"{tag} ---> p: {round(nth_entity_metric['p'], 2)}, r: {round(nth_entity_metric['r'], 2)}, f1: {round(nth_entity_metric['f'], 2)}")
-    #             print(f"EPOCH {itn + 1} completed.")
-    #     model_name = str(int(time.time()))
-    #     self.nlp.to_disk(f"spacy_model/{model_name}")
+#         with self.nlp.disable_pipes(*unaffected_pipes):
+#             for itn in range(epochs):
+#                 random.shuffle(self.phrase_list)
+#                 train_set, test_set = self.__split_train_test(self.phrase_list, split_ratio)
+#                 losses = {}
+#                 batches = minibatch(train_set, size=compounding(4.0, 128.0, 1.005))
+#                 drop_rate = decaying(0.6, 0.2, 1e-4)
+#                 with tqdm(total=len(train_set)) as pbar:
+#                     for batch in batches:
+#                         texts, annotations = zip(*batch)
+#                         try:
+#                             self.nlp.update(texts, annotations, sgd=self.optimizer, drop=next(drop_rate), losses=losses)
+#                             pbar.update(len(texts))
+#                         except Exception as e:
+#                             print(e, list(zip(texts, annotations)))
+#                 eval_metrics = self.__evaluate(self.nlp, test_set)
+#                 entity_metrics = eval_metrics['ents_per_type']
+#                 print("Evaluating EPOCH {itn + 1} on {len(test_set)} records...\nEvaluation metrics:")
+#                 for tag, nth_entity_metric in entity_metrics.items():
+#                     print(f"{tag} ---> p: {round(nth_entity_metric['p'], 2)}, r: {round(nth_entity_metric['r'], 2)}, f1: {round(nth_entity_metric['f'], 2)}")
+#                 print(f"EPOCH {itn + 1} completed.")
+#         model_name = str(int(time.time()))
+#         self.nlp.to_disk(f"spacy_model/{model_name}")
