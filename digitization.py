@@ -1029,7 +1029,7 @@ class ExtractToJson:
             lines = ""
             test_idx = 0
             for line in page.splitlines():
-                line = self.clean_text(line)
+                # line = self.clean_text(line)
                 if line != '':
                     html_line = line
                     offset = 0
@@ -1088,7 +1088,8 @@ class ExtractToJson:
 
         for key, file_content in text.items():
             for line in file_content.splitlines():
-                cleaned_line = self.clean_text(line)
+                # cleaned_line = self.clean_text(line)
+                cleaned_line = line
                 if cleaned_line != '':
                     words_line = ''
                     tags_line = ''
@@ -1179,7 +1180,9 @@ class ExtractToJson:
 
     def linewise_tags(self, page, ent_log):
         line_tag_dict = {}
-        lines = [self.clean_text(line) for line in page.splitlines()]
+        # lines = [self.clean_text(line) for line in page.splitlines()]
+        lines = [line for line in page.splitlines()]
+
         line_ind_checked = 0
         tag_found_count = 0
         cummulative_line_start_forent = 0
@@ -1246,7 +1249,8 @@ class ExtractToJson:
             lines = ""
             test_idx = 0
             new_page = page
-            value = self.clean_text(page)
+            # value = self.clean_text(page)
+            value = page
 
             # doc1 = self.model(value)
             # ent_log1 = [(ent.text, ent.label_, ent.start_char, ent.end_char) for ent in doc1.ents]
