@@ -1208,6 +1208,11 @@ class ExtractToJson:
 
                 cummulative_line_startind = line_end+1
                 line_no +=1
+        
+        for line in lines:
+            if line not in line_tag_dict.keys():
+                line_tag_dict[line] = []
+
         print(tag_found_count)
         return line_tag_dict
 
