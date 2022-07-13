@@ -1,0 +1,106 @@
+Volume 20 mL    Volume   20   mL    TST RES UNT
+Colour Pale yellow    Colour   Pale yellow    TST RES
+Specific gravity 1.025    Specific gravity   1.025    TST RES
+Reaction pH Acidic 6.0    Reaction pH   Acidic 6.0    TST RES
+Appearance Clear    Appearance   Clear    TST RES
+Protein ab nil    Protein ab   nil    TST RES
+Sugar nil    Sugar   nil    TST RES
+Bile Pigment nil    Bile Pigment   nil    TST RES
+Bile Salt nil    Bile Salt   nil    TST RES
+Ketone Bodies nil    Ketone Bodies   nil    TST RES
+Nitrite nil    Nitrite   nil    TST RES
+RBC nil    RBC   nil    TST RES
+WBC/Pus Cells 1-2 /hpf    WBC/Pus Cells   1-2   /hpf    TST RES UNT
+Epithelial cells 1-2 /hpf    Epithelial cells   1-2   /hpf    TST RES UNT
+Crystal nil    Crystal   nil    TST RES
+Casts nil    Casts   nil    TST RES
+URINE COTININE NEGATIVE    URINE COTININE   NEGATIVE    TST RES
+NEL]TROPIIIL 66 % 40-75    NEL]TROPIIIL   66   %   40-75    TST RES UNT REF
+EOSINOPHIL 2 % 1-6    EOSINOPHIL   2   %   1-6    TST RES UNT REF
+DASOPHIL 0 % 0-5    DASOPHIL   0   %   0-5    TST RES UNT REF
+TotalRBC Count 5.06 Mill/cumm 4.5-6.5    TotalRBC Count   5.06   Mill/cumm   4.5-6.5    TST RES UNT REF
+PLATELETS COUNT 2.84 LACK/CUMM 1.5-4    PLATELETS COUNT   2.84   LACK/CUMM   1.5-4    TST RES UNT REF
+S.I]ILIITUBIN TOTAL 0.45 ng/dl 0.2 to 1.2    S.I]ILIITUBIN TOTAL   0.45   ng/dl   0.2 to 1.2    TST RES UNT REF
+DIRECT 0.19 n{dl 00 to 0.2    DIRECT   0.19   n{dl   00 to 0.2    TST RES UNT REF
+INDIRECT 0.26 mg/dl 00 to 1    INDIRECT   0.26   mg/dl   00 to 1    TST RES UNT REF
+SGPT 32 IUIL 0-38 IU//L    SGPT   32   IUIL   0-38   IU//L    TST RES UNT REF MTD
+SGOT 35 IU/L 0-46 IUL    SGOT   35   IU/L   0-46   IUL    TST RES UNT REF MTD
+ALKLINE PHASPHATASE 78 IU/L 13 125    ALKLINE PHASPHATASE   78   IU/L   13 125    TST RES UNT REF
+PROTEIN TOTAL 6.9 c/dL 6.0-8.3    PROTEIN TOTAL   6.9   c/dL   6.0-8.3    TST RES UNT REF
+ALBUMIN SERUM 4.1 g/dl 3.2-5.0    ALBUMIN SERUM   4.1   g/dl   3.2-5.0    TST RES UNT REF
+SERUM GLOBULINE 2.8 g/dl 1.5-3.0    SERUM GLOBULINE   2.8   g/dl   1.5-3.0    TST RES UNT REF
+SERUM ALBUMIN/GLOBULIN RATIO 1.46  0.9-2.0    SERUM ALBUMIN/GLOBULIN RATIO   1.46   0.9-2.0    TST RES REF
+BLOOD UREA 21.6 mg/dl 13 to 50    BLOOD UREA   21.6   mg/dl   13 to 50    TST RES UNT REF
+CREATININE SERUM 0.87 mg/dl 0.71o 1.5    CREATININE SERUM   0.87   mg/dl   0.71o 1.5    TST RES UNT REF
+SERUM CHOLESTROL 174 mg/dl 100-225    SERUM CHOLESTROL   174   mg/dl   100-225    TST RES UNT REF
+TRICLYCERIDE 132 mg/dl 25 160    TRICLYCERIDE   132   mg/dl   25 160    TST RES UNT REF
+HDL 41 mg/dl 30-70    HDL   41   mg/dl   30-70    TST RES UNT REF
+LDL 106.6 mg/dl 65-150    LDL   106.6   mg/dl   65-150    TST RES UNT REF
+VLDL 26.4 mgdl 07-35    VLDL   26.4   mgdl   07-35    TST RES UNT REF
+BLOOD SUGAR F 90 mg/dl 70-110    BLOOD SUGAR F   90   mg/dl   70-110    TST RES UNT REF
+HIV NON REACTIVE    HIV   NON REACTIVE    TST RES
+Blood Sugar Fasting 79.9    Blood Sugar Fasting   79.9    TST RES
+Gama Glutamyl Transferase GGT 21.6    Gama Glutamyl Transferase GGT   21.6    TST RES
+Serum Cholesterol 148.8    Serum Cholesterol   148.8    TST RES
+RUA Routine Urine Analysis NAD    RUA Routine Urine Analysis   NAD    TST RES
+Serum Cholesterol 148.8   ECG RECEIVED    Serum Cholesterol   148.8   ECG RECEIVED    TST RES MTD
+RUA Routine Urine Analysis NAD    RUA Routine Urine Analysis   NAD    TST RES
+Colour P. Yellow    Colour   P. Yellow    TST RES
+Appearance Clear    Appearance   Clear    TST RES
+Specific gravity 1.015    Specific gravity   1.015    TST RES
+Reaction Acidic    Reaction   Acidic    TST RES
+Phosphates nil    Phosphates   nil    TST RES
+Urates nil    Urates   nil    TST RES
+Albumuine nil    Albumuine   nil    TST RES
+Sugar nil    Sugar   nil    TST RES
+Ketones nil    Ketones   nil    TST RES
+Bile salts Negative    Bile salts   Negative    TST RES
+Bile pigments Negative    Bile pigments   Negative    TST RES
+Blood Negative    Blood   Negative    TST RES
+Erythrocytes Nil    Erythrocytes   Nil    TST RES
+Leucocytes 2-3 hpt    Leucocytes   2-3   hpt    TST RES UNT
+Epithelial cells 2-3 /hpf    Epithelial cells   2-3   /hpf    TST RES UNT
+Cast nil    Cast   nil    TST RES
+Crystal nil    Crystal   nil    TST RES
+Bacteria nil    Bacteria   nil    TST RES
+Serum Triglycerides 127.8    Serum Triglycerides   127.8    TST RES
+ESR Erythrocyte Sedimentation Rate 06    ESR Erythrocyte Sedimentation Rate   06    TST RES
+HIV 1 Non Reactive   ELISA    HIV 1   Non Reactive   ELISA    TST RES MTD
+HIV 2 Non Reactive   ELISA    HIV 2   Non Reactive   ELISA    TST RES MTD
+GLYCOSYLATED HEMOGLOBIN 5.6 % 430-6.40    GLYCOSYLATED HEMOGLOBIN   5.6   %   430-6.40    TST RES UNT REF
+Volume 10 ML    Volume   10   ML    TST RES UNT
+Colour Pale Yellow  Yellow - Straw    Colour   Pale Yellow   Yellow - Straw    TST RES REF
+Reaction pH 5.0  5.0-8.0    Reaction pH   5.0   5.0-8.0    TST RES REF
+Specific Gravity 1.020  1.005-1.030    Specific Gravity   1.020   1.005-1.030    TST RES REF
+Deposits Absent    Deposits   Absent    TST RES
+Proteins Absent  Negative    Proteins   Absent   Negative    TST RES REF
+Ketones Absent  Negative    Ketones   Absent   Negative    TST RES REF
+Sugar Absent  Negative    Sugar   Absent   Negative    TST RES REF
+Occult Blood Absent  Negative    Occult Blood   Absent   Negative    TST RES REF
+Urobilinogen Absent    Urobilinogen   Absent    TST RES
+Bile Pigments Absent  Negative    Bile Pigments   Absent   Negative    TST RES REF
+Epithelial Cells 0-2 /HPF Not seen    Epithelial Cells   0-2   /HPF   Not seen    TST RES UNT REF
+Pus Cells 1-2 IHPF 0-2    Pus Cells   1-2   IHPF   0-2    TST RES UNT REF
+Red Blood Cells Absent HPF 0-5    Red Blood Cells   Absent   HPF   0-5    TST RES UNT REF
+Crystals None seen  None seen    Crystals   None seen   None seen    TST RES REF
+Casts None seen  None seen    Casts   None seen   None seen    TST RES REF
+Haemoglobin 14.7 gm/dL 12 18    Haemoglobin   14.7   gm/dL   12 18    TST RES UNT REF
+RBC Count 4.25 mill/cu.mm 4 6.5    RBC Count   4.25   mill/cu.mm   4 6.5    TST RES UNT REF
+PCV 45.7 % 40-54    PCV   45.7   %   40-54    TST RES UNT REF
+MCV 107.53 fL 78-110    MCV   107.53   fL   78-110    TST RES UNT REF
+MCH 34.59 ee 24 38    MCH   34.59   ee   24 38    TST RES UNT REF
+MCHC 32.17 % 26 37    MCHC   32.17   %   26 37    TST RES UNT REF
+Total WBC Count 7900 icomm 4000 11000    Total WBC Count   7900   icomm   4000 11000    TST RES UNT REF
+Neutrophils 70 % 40 70    Neutrophils   70   %   40 70    TST RES UNT REF
+Lymphocytes 28 % 20-40    Lymphocytes   28   %   20-40    TST RES UNT REF
+Eosinophils 01 % 0-6    Eosinophils   01   %   0-6    TST RES UNT REF
+Monocytes 01 % 0-4    Monocytes   01   %   0-4    TST RES UNT REF
+Basophils 0 % 0-1    Basophils   0   %   0-1    TST RES UNT REF
+Platelet Count 175000 iomm 150000-450000    Platelet Count   175000   iomm   150000-450000    TST RES UNT REF
+RBC Morphology Normocytic Normochromic    RBC Morphology   Normocytic Normochromic    TST RES
+WBC Morphology Normal    WBC Morphology   Normal    TST RES
+Gama Glutamyl Transferase GGT 26    Gama Glutamyl Transferase GGT   26    TST RES
+Gama Giutamy Transferase GGT 26    Gama Giutamy Transferase GGT   26    TST RES
+PLASMA GLUCOSE FASTING 95 mg/dl 70-110    PLASMA GLUCOSE FASTING   95   mg/dl   70-110    TST RES UNT REF
+SERUM CHOLESTEROL 178 mg/dl    SERUM CHOLESTEROL   178   mg/dl    TST RES UNT
+GGTP 26 IU/L 9-52    GGTP   26   IU/L   9-52    TST RES UNT REF
