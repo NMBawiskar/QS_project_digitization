@@ -1423,8 +1423,10 @@ class ExtractToJson:
                                 to_replace = to_replace.replace('(','\(')
                                 r_text = list(val.values())
                                 if len(r_text) > 0 and r_text[0] != '':
-                                    html_line = re.sub(fr'(data-entity="{tag.lower()}"><span class="text">{to_replace}</span>)', fr'data-entity="{tag.lower()}"><span class="text">{r_text[0]}</span>', html_line)
-                                    # html_line = re.sub(fr'(data-entity="{tag.lower()}">)[\w\W]+?(</span>)', fr'\1<span class="text">{r_text[0]}</span>\2', html_line)
+                                    try:
+                                        html_line = re.sub(fr'(data-entity="{tag.lower()}"><span class="text">{to_replace}</span>)', fr'data-entity="{tag.lower()}"><span class="text">{r_text[0]}</span>', html_line)
+                                    except:
+                                        html_line = re.sub(fr'(data-entity="{tag.lower()}">)[\w\W]+?(</span>)', fr'\1<span class="text">{r_text[0]}</span>\2', html_line)
                 lines += html_line + "\n"
             html_data[page_idx + 1] = lines
 
