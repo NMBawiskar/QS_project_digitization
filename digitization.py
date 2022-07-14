@@ -1365,7 +1365,24 @@ class ExtractToJson:
 
                             t1 = (txt_to_add, label_to_add, strtind, endind)
                             entities.insert(ind, t1)
-                    
+            
+
+                if 'RES' in [i[1] for i in ents] and 'REF' not in [i[1] for i in ents]:
+                    res = [i for i in ents if i[1] == 'RES'][0]
+                    wrd = res[0]
+                    idxs = [m.start() for m in re.finditer(wrd, line_txt)]
+                    strtindx = [ind for ind in idxs if ind != res[2]]
+                    if len(strtindx) > 0:
+                        startind = strtindx[0]
+                        endind = startind + len(wrd)
+                        t1 = (res[0], 'REF', startind, endind)
+
+                        for i, e in enumerate(ents):
+                            if e[3] < startind:
+                                insert_at = i+1
+                        entities.insert(insert_at,t1)
+
+
                 html_line = line_txt
 
                 ############# Micro corrections to the tag and words ##############
@@ -1401,9 +1418,13 @@ class ExtractToJson:
                         suggs.pop('LCL', None)
                         suggs.pop('UCL', None)
                         for tag, val in suggs.items():
-                            r_text = list(val.values())
-                            if len(r_text) > 0 and r_text[0] != '':
-                                html_line = re.sub(fr'(data-entity="{tag.lower()}">)[\w\W]+?(</span>)', fr'\1<span class="text">{r_text[0]}</span>\2', html_line)
+                            if tag in get_suggestion_data.keys():
+                                to_replace = get_suggestion_data[tag]
+                                to_replace = to_replace.replace('(','\(')
+                                r_text = list(val.values())
+                                if len(r_text) > 0 and r_text[0] != '':
+                                    html_line = re.sub(fr'(data-entity="{tag.lower()}"><span class="text">{to_replace}</span>)', fr'data-entity="{tag.lower()}"><span class="text">{r_text[0]}</span>', html_line)
+                                    # html_line = re.sub(fr'(data-entity="{tag.lower()}">)[\w\W]+?(</span>)', fr'\1<span class="text">{r_text[0]}</span>\2', html_line)
                 lines += html_line + "\n"
             html_data[page_idx + 1] = lines
 
